@@ -19,6 +19,7 @@
 package org.apache.fineract.integrationtests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
@@ -76,6 +77,7 @@ public class ClientSavingsIntegrationTest {
     public static final String MINIMUM_OPENING_BALANCE = "1000.0";
     public static final String ACCOUNT_TYPE_INDIVIDUAL = "INDIVIDUAL";
     public static final String DATE_FORMAT = "dd MMMM yyyy";
+    public static final String DATE_OF_BIRTH = "26 September 1995";
 
     private ResponseSpecification responseSpec;
     private RequestSpecification requestSpec;
@@ -92,6 +94,36 @@ public class ClientSavingsIntegrationTest {
         this.requestSpec.header("Fineract-Platform-TenantId", "default");
         this.responseSpec = new ResponseSpecBuilder().expectStatusCode(200).build();
         this.paymentTypeHelper = new PaymentTypeHelper();
+    }
+
+    @Test
+    public void testSavingsAccountWithBirthDay() {
+        this.savingsAccountHelper = new SavingsAccountHelper(this.requestSpec, this.responseSpec);
+
+        final Integer clientID = ClientHelper.createClientWithDateOfBirth(this.requestSpec, this.responseSpec, DATE_OF_BIRTH);
+        ClientHelper.verifyClientCreatedOnServer(this.requestSpec, this.responseSpec, clientID);
+        Assertions.assertNotNull(clientID);
+
+        final String minBalanceForInterestCalculation = null;
+        final String minRequiredBalance = null;
+        final String enforceMinRequiredBalance = "false";
+        final boolean allowOverdraft = false;
+        final Integer savingsProductID = createSavingsProduct(this.requestSpec, this.responseSpec, MINIMUM_OPENING_BALANCE,
+                minBalanceForInterestCalculation, minRequiredBalance, enforceMinRequiredBalance, allowOverdraft);
+        Assertions.assertNotNull(savingsProductID);
+
+        final Integer savingsId = this.savingsAccountHelper.applyForSavingsApplication(clientID, savingsProductID, ACCOUNT_TYPE_INDIVIDUAL);
+        Assertions.assertNotNull(savingsId);
+
+        final HashMap savingsAccountsSuccess = this.savingsAccountHelper.listSavingsAccounts("9-26");
+        Assertions.assertEquals(savingsAccountsSuccess.get("totalFilteredRecords"), 1);
+        final ArrayList<HashMap> savingsAccountSuccessArray = (ArrayList<HashMap>) savingsAccountsSuccess.get("pageItems");
+        Assertions.assertEquals(savingsAccountSuccessArray.get(0).get("clientId"), clientID);
+        
+        final HashMap savingsAccountsFailed = this.savingsAccountHelper.listSavingsAccounts("9-27");
+        Assertions.assertEquals(savingsAccountsFailed.get("totalFilteredRecords"), 0);
+
+        this.savingsAccountHelper.deleteSavingsApplication(savingsId, CommonConstants.RESPONSE_RESOURCE_ID);
     }
 
     @Test

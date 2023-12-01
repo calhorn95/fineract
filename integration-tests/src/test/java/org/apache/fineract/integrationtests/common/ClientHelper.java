@@ -191,6 +191,12 @@ public class ClientHelper extends IntegrationTest {
             final String activationDate) {
         return createClient(requestSpec, responseSpec, activationDate, "1");
     }
+    
+    public static Integer createClientWithDateOfBirth(final RequestSpecification requestSpec, final ResponseSpecification responseSpec, final String dateOfBirth) {
+        log.info("---------------------------------CREATING A CLIENT---------------------------------------------");
+        return Utils.performServerPost(requestSpec, responseSpec, CREATE_CLIENT_URL, getTestClientAsJSONDateOfBirth(dateOfBirth),
+                "clientId");
+    }
 
     public static Integer createClient(final RequestSpecification requestSpec, final ResponseSpecification responseSpec,
             final String activationDate, final String officeId) {
@@ -346,6 +352,17 @@ public class ClientHelper extends IntegrationTest {
         log.info("Client JSON :  {}", basicClientAsJson);
         return basicClientAsJson;
     }
+    
+    public static String getTestClientAsJSONDateOfBirth(final String dateOfBirth) {
+        HashMap<String, Object> map = setInitialClientValues("1", LEGALFORM_ID_PERSON);
+        map.put("active", "true");
+        map.put("activationDate", DEFAULT_DATE);
+        map.put("dateOfBirth", dateOfBirth);
+        final String testClientAsJson = GSON.toJson(map);
+        log.info("TestClient Request :  {}", testClientAsJson);
+        return testClientAsJson;
+    }
+
 
     public static String getTestClientAsJSON(final String dateOfJoining, final String officeId) {
         HashMap<String, Object> map = setInitialClientValues(officeId, LEGALFORM_ID_PERSON);

@@ -28,6 +28,7 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.MonthDay;
@@ -528,7 +529,8 @@ public class JsonParserHelper {
                 DateTimeFormatter formatter = new DateTimeFormatterBuilder().parseCaseInsensitive().parseLenient()
                         .appendPattern(dateTimeFormat).optionalStart().appendPattern(" HH:mm:ss").optionalEnd()
                         .parseDefaulting(ChronoField.HOUR_OF_DAY, 0).parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
-                        .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0).toFormatter(clientApplicationLocale);
+                        .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0).parseDefaulting(ChronoField.YEAR_OF_ERA, ZonedDateTime.now().getYear())
+                        .toFormatter(clientApplicationLocale);
                 eventLocalDateTime = LocalDateTime.parse(dateTimeAsString, formatter);
             } catch (final IllegalArgumentException | DateTimeParseException e) {
                 final List<ApiParameterError> dataValidationErrors = new ArrayList<>();

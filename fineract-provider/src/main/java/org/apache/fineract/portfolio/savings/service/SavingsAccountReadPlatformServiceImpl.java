@@ -180,7 +180,6 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
     @Override
     public Page<SavingsAccountData> retrieveAll(final SearchParameters searchParameters) {
-
         final AppUser currentUser = this.context.authenticatedUser();
         final String hierarchy = currentUser.getOffice().getHierarchy();
         final String hierarchySearchString = hierarchy + "%";
@@ -192,7 +191,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         sqlBuilder.append(" join m_office o on o.id = c.office_id");
         sqlBuilder.append(" where o.hierarchy like ?");
 
-        final Object[] objectArray = new Object[2];
+        final Object[] objectArray = new Object[4];
         objectArray[0] = hierarchySearchString;
         int arrayPos = 1;
         if (searchParameters != null) {
@@ -213,6 +212,16 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                 objectArray[arrayPos] = searchParameters.getOfficeId();
                 arrayPos = arrayPos + 1;
             }
+            
+            if (searchParameters.getBirthDate() != null) {
+                sqlBuilder.append(" and DAYOFMONTH(c.date_of_birth) = ?");
+                objectArray[arrayPos] = searchParameters.getBirthDate().getDayOfMonth();
+                arrayPos = arrayPos + 1;
+                sqlBuilder.append(" and MONTH(c.date_of_birth) = ?");
+                objectArray[arrayPos] = searchParameters.getBirthDate().getMonthValue();
+                arrayPos = arrayPos + 1;
+            }
+
             if (searchParameters.isOrderByRequested()) {
                 sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
                 this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
